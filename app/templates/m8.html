@@ -1,0 +1,58 @@
+{% extends "base.html" %}{% block content %}
+<div class="console-grid">
+  <section class="panel wide">
+    <div class="panel__head"><h2>截止结算 · 渠道固定额度</h2>{% if settlement %}<span>{{settlement.settlement_id[:16]}}</span>{% endif %}</div>
+    {% if settlement %}
+    <div class="kpis">
+      <div class="kpi"><small>QUOTA</small><strong>{{settlement.totals.quota}}</strong><span>固定额度</span></div>
+      <div class="kpi"><small>OCCUPYING</small><strong>{{settlement.totals.occupied}}</strong><span>仍占旧额度</span></div>
+      <div class="kpi"><small>PENDING</small><strong class="warn">{{settlement.totals.pending}}</strong><span>回执待处理</span></div>
+      <div class="kpi"><small>RETURNED</small><strong>{{settlement.totals.returned}}</strong><span>已回总池</span></div>
+      <div class="kpi"><small>REJECTED</small><strong class="warn">{{settlement.totals.late_rejects}}</strong><span>拒绝回执</span></div>
+    </div>
+    <div class="channel-numbers">
+      {% for c in settlement.channels %}
+      <div><small>{{c.channel}} 额度 {{c.quota}} / 剩余 {{c.quota_left}}</small><b>占 {{c.occupied}} · 待 {{c.pending}} · 回 {{c.returned}}</b><span class="countline">{{c.state}}</span></div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <form id="settle-form" data-run="{{result.manifest.run_id}}">
+      <label>截止时刻（含偏移）<input name="deadline" value="{{result.manifest.params.settle_deadline}}"></label>
+      <button class="button primary" type="submit">SETTLE / 执行截止结算</button>
+    </form>
+    <p class="countline">结算只对当前批次生效；同一截止时刻重跑复用同一结算，不会重复扣减额度。</p>
+    {% endif %}
+  </section>
+
+  <section class="panel wide">
+    <div class="panel__head"><h2>逐席裁决</h2><span>{{settlement.seat_ledger|length if settlement else 0}} SEATS</span></div>
+    {% if settlement %}
+    {{rows(settlement.seat_ledger,['seat','channel','order','lease','state','detail'])}}
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <div class="panel__head"><h2>回执处理台</h2><span>截止后补传</span></div>
+    {% if settlement %}
+    <form id="receipt-form" data-settlement="{{settlement.settlement_id}}" data-run="{{result.manifest.run_id}}">
+      <label>事件号<input name="id" required></label>
+      <label>渠道<select name="channel"><option>官方</option><option>票社</option><option>团购</option></select></label>
+      <label>座席<input name="seat" placeholder="A-01" required></label>
+      <label>订单<input name="order" required></label>
+      <label>回执时刻（含偏移）<input name="time" placeholder="2026-11-17T11:05:00+08:00" required></label>
+      <label>类型<select name="type"><option value="pay">pay 支付回执</option><option value="issue">issue 出票回执</option></select></label>
+      <label>金额 CNY<input name="amount" placeholder="100"></label>
+      <label>票号（issue 必填）<input name="ticket"></label>
+      <button class="button primary" type="submit">SUBMIT / 受理裁决</button>
+    </form>
+    {% endif %}
+  </section>
+
+  <section class="panel wide">
+    <div class="panel__head"><h2>回执台账（受理与拒绝）</h2><span>{{settlement.receipts|length if settlement else 0}} RECEIPTS</span></div>
+    {% if settlement %}
+    {{rows(settlement.receipts,['id','seat','channel','type','time','code','reason','detail','source'])}}
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

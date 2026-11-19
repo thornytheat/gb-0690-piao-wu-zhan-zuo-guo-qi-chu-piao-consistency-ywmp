@@ -15,6 +15,7 @@
 | M5 出票核验 | 检查支付及票号一致 | `/api/m5` | `app/modules/m5_tickets/rules.py` `app/modules/m5_tickets/service.py` | `tests/test_m5_tickets.py` |
 | M6 渠道对账 | 核对渠道金额与悬单 | `/api/m6` | `app/modules/m6_reconcile/rules.py` `app/modules/m6_reconcile/service.py` | `tests/test_m6_reconcile.py` |
 | M7 补传复核 | 补传回放和版本复核 | `/api/m7` | `app/modules/m7_replay/rules.py` `app/modules/m7_replay/service.py` | `tests/test_m7_replay.py` |
+| M8 额度结算 | 截止结算与回执裁决 | `/api/m8` `/api/m8/receipt` | `app/modules/m8_settlement/rules.py` `app/modules/m8_settlement/service.py` | `tests/test_m8_settlement.py` |
 
 ## 陷阱登记
 
@@ -28,6 +29,8 @@
 | TRAP-14 | 同版冲突 | 覆盖或重复售卖 | 事件时间回放并保留隔离证据 | `app/modules/m2_seats/rules.py` | `tests/test_m2_seats.py::test_real_conflict` |
 | TRAP-23 | 过期端点 | 覆盖或重复售卖 | 事件时间回放并保留隔离证据 | `app/modules/m3_leases/rules.py` | `tests/test_m3_leases.py::test_expiration_endpoint_reusable` |
 | TRAP-26 | 陈旧复核 | 覆盖或重复售卖 | 事件时间回放并保留隔离证据 | `app/store.py` | `tests/test_m7_replay.py::test_stale_review` |
+| TRAP-31 | 结算重跑重复扣减 | 同一截止结算被二次执行 | 结算ID派生+INSERT OR IGNORE，回执按事件号幂等 | `app/store.py` `app/modules/m8_settlement/rules.py` | `tests/test_m8_settlement.py::test_replay_same_receipt_does_not_deduct_twice` |
+| TRAP-32 | 过期占座后到达回执 | 回池座席被补传回执重新占用、重复卖出 | 回执台校验有效占座区间，失效即 LATE_REJECT | `app/modules/m8_settlement/rules.py` | `tests/test_m8_settlement.py::test_receipt_on_returned_seat_rejected` |
 
 ## 对账规则
 
