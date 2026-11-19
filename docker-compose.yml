@@ -1,0 +1,17 @@
+name: p1118-seat-expiry
+services:
+  app:
+    build: .
+    ports:
+      - "18204:8000"
+    environment:
+      DATA_DIR: /data
+    volumes:
+      - records:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+volumes:
+  records:
